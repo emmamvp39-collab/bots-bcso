@@ -2,20 +2,20 @@ const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
-// Création dynamique d'un dossier "data" à la racine si besoin
 const dataDir = path.join(__dirname, '../../data');
 const passesFile = path.join(dataDir, 'passes.json');
 
+// Création du fichier s'il n'existe pas
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(passesFile)) fs.writeFileSync(passesFile, JSON.stringify([]));
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('pass-absence')
-        .setDescription('Gère les pass d\'immunité pour les absences Rollcall.')
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild) // Réservé aux admins
+        .setDescription('Ajoute ou retire une immunité Rollcall pour un agent.')
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addUserOption(option => 
-            option.setName('agent')
+            option.setName('cible')
                 .setDescription('L\'agent concerné')
                 .setRequired(true)
         )
@@ -29,28 +29,33 @@ module.exports = {
                 )
         ),
 
-    async execute(interaction) {
-        const user = interaction.options.getUser('agent');
+    async execute(interaction, client) {
+        const cible = interaction.options.getUser('cible');
         const action = interaction.options.getString('action');
         
         let passes = JSON.parse(fs.readFileSync(passesFile, 'utf8'));
 
-        if (action === 'add') {
-            if (!passes.includes(user.id)) {
-                passes.push(user.id);
-                fs.writeFileSync(passesFile, JSON.stringify(passes, null, 2));
-                return interaction.reply({ content: `✅ Le pass d'immunité a été **ajouté** pour <@${user.id}>. Les alertes seront ignorées.`, ephemeral: true });
+        try {
+            if (action === 'add') {
+                if (!passes.includes(cible.id)) {
+                    passes.push(cible.id);
+                    fs.writeFileSync(passesFile, JSON.stringify(passes, null, 2));
+                    await interaction.reply({ content: `✅ Accès accordé : Le pass d'immunité a été ajouté pour ${cible} par ${interaction.user}.`, ephemeral: true });
+                } else {
+                    await interaction.reply({ content: `⚠️ ${cible} possède déjà un pass d'immunité.`, ephemeral: true });
+                }
             } else {
-                return interaction.reply({ content: `⚠️ <@${user.id}> possède **déjà** un pass d'immunité.`, ephemeral: true });
+                if (passes.includes(cible.id)) {
+                    passes = passes.filter(id => id !== cible.id);
+                    fs.writeFileSync(passesFile, JSON.stringify(passes, null, 2));
+                    await interaction.reply({ content: `❌ Le pass d'immunité a été retiré pour ${cible}.`, ephemeral: true });
+                } else {
+                    await interaction.reply({ content: `⚠️ ${cible} n'avait pas de pass d'immunité actif.`, ephemeral: true });
+                }
             }
-        } else {
-            if (passes.includes(user.id)) {
-                passes = passes.filter(id => id !== user.id);
-                fs.writeFileSync(passesFile, JSON.stringify(passes, null, 2));
-                return interaction.reply({ content: `❌ Le pass d'immunité a été **retiré** pour <@${user.id}>.`, ephemeral: true });
-            } else {
-                return interaction.reply({ content: `⚠️ <@${user.id}> n'avait **pas** de pass d'immunité actif.`, ephemeral: true });
-            }
+        } catch (error) {
+            console.error("❌ Erreur lors de la gestion du pass :", error);
+            await interaction.reply({ content: "⚠️ Une erreur est survenue lors de la modification du pass.", ephemeral: true });
         }
     }
 };
