@@ -30,7 +30,7 @@ module.exports = {
                 },
                 { 
                     name: '💳 Tarif', 
-                    value: "**4 €** pour obtenir ton accès Premium.\n\n*Moyens de paiement acceptés :*\n> • PayPal" 
+                    value: "**6,5 €** pour obtenir ton accès Premium.\n\n*Moyens de paiement acceptés :*\n> • PayPal" 
                 },
                 { 
                     name: '📩 Comment obtenir ton accès ?', 

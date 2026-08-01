@@ -1,19 +1,18 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const config = require('../../config.js'); // 🚀 Importation de la config
 
 const dataDir = path.join(__dirname, '../../data');
 const passesFile = path.join(dataDir, 'passes.json');
 
-// Création du fichier s'il n'existe pas
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 if (!fs.existsSync(passesFile)) fs.writeFileSync(passesFile, JSON.stringify([]));
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('pass-absence')
-        .setDescription('Ajoute ou retire une immunité Rollcall pour un agent.')
-        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+        .setDescription('Ajoute ou retire une immunité Rollcall pour un agent (Owner uniquement).')
         .addUserOption(option => 
             option.setName('cible')
                 .setDescription('L\'agent concerné')
@@ -30,6 +29,11 @@ module.exports = {
         ),
 
     async execute(interaction, client) {
+        // 🔒 Sécurité : Vérification dynamique via config.js
+        if (interaction.user.id !== config.ownerId) {
+            return interaction.reply({ content: "❌ Cette commande est réservée au créateur du bot.", ephemeral: true });
+        }
+
         const cible = interaction.options.getUser('cible');
         const action = interaction.options.getString('action');
         
@@ -40,7 +44,7 @@ module.exports = {
                 if (!passes.includes(cible.id)) {
                     passes.push(cible.id);
                     fs.writeFileSync(passesFile, JSON.stringify(passes, null, 2));
-                    await interaction.reply({ content: `✅ Accès accordé : Le pass d'immunité a été ajouté pour ${cible} par ${interaction.user}.`, ephemeral: true });
+                    await interaction.reply({ content: `✅ Accès accordé : Le pass d'immunité a été ajouté pour ${cible}.`, ephemeral: true });
                 } else {
                     await interaction.reply({ content: `⚠️ ${cible} possède déjà un pass d'immunité.`, ephemeral: true });
                 }

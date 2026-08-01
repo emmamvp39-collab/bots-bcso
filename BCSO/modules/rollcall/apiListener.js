@@ -1,7 +1,5 @@
 const express = require('express');
 const { EmbedBuilder } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
 
 module.exports = (client) => {
     const app = express();
@@ -9,29 +7,20 @@ module.exports = (client) => {
 
     const PORT = process.env.PORT || 3000; 
     const ABSENCE_CHANNEL_ID = '1492689033321775195';
-    
-    // Chemin vers le fichier des pass
-    const passesFile = path.join(__dirname, '../../data/passes.json');
+    const ALERT_CHANNEL_ID = '1530946442359996546';   
 
     app.post('/api/check-absence', async (req, res) => {
         const { discordId } = req.body;
 
         if (!discordId) return res.status(400).json({ error: 'discordId manquant' });
 
-        // Vérification du pass d'immunité
-        if (fs.existsSync(passesFile)) {
-            const passes = JSON.parse(fs.readFileSync(passesFile, 'utf8'));
-            if (passes.includes(discordId)) {
-                console.log(`🛡️ [Immunité] Vérification ignorée pour l'ID ${discordId} (Pass actif)`);
-                return res.status(200).json({ message: 'Agent immunisé.' });
-            }
-        }
-
         try {
-            const channel = await client.channels.fetch(ABSENCE_CHANNEL_ID);
-            if (!channel) return res.status(500).json({ error: 'Salon des absences introuvable' });
+            const absenceChannel = await client.channels.fetch(ABSENCE_CHANNEL_ID);
+            const alertChannel = await client.channels.fetch(ALERT_CHANNEL_ID);
+            
+            if (!absenceChannel || !alertChannel) return res.status(500).json({ error: 'Un des salons est introuvable' });
 
-            const messages = await channel.messages.fetch({ limit: 100 });
+            const messages = await absenceChannel.messages.fetch({ limit: 100 });
             const userMessages = messages.filter(m => m.author.id === discordId);
 
             let hasPostedAbsence = false;
@@ -44,16 +33,13 @@ module.exports = (client) => {
             });
 
             if (!hasPostedAbsence) {
-                // Création de l'Embed
                 const alertEmbed = new EmbedBuilder()
-                    .setColor('#ff0000') // Rouge pour l'alerte
+                    .setColor('#ff0000')
                     .setTitle('⚠️ Alerte Rollcall ⚠️')
-                    .setDescription(`L'agent <@${discordId}> a atteint 4 absences ou non-réactions non justifiées !\nAucune trace de la template d'absence trouvée.`)
+                    .setDescription(`L'agent <@${discordId}> a atteint 4 absences ou non-réactions non justifiées !\nAucune trace de la template d'absence dans <#${ABSENCE_CHANNEL_ID}>.`)
                     .setTimestamp();
 
-                // Envoi direct dans le salon avec mention
-                await channel.send({ content: `<@${discordId}>`, embeds: [alertEmbed] });
-                
+                await alertChannel.send({ content: `<@${discordId}>`, embeds: [alertEmbed] });
                 return res.status(200).json({ message: 'Alerte Embed envoyée avec succès.' });
             }
 
