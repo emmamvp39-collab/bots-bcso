@@ -26,7 +26,7 @@ module.exports = {
             )
             .setColor('#2b2d31')
             .addFields(
-                { name: '👑 Direction', value: 'Problème grave, signalement important ou contact avec les fondateurs.', inline: true },
+                { name: '👑 Direction', value: 'Problème grave, signalement important ou contact avec la direction.', inline: true },
                 { name: '❓ Questions & Aide', value: 'Besoin d\'un renseignement ou d\'aide sur le fonctionnement du serveur.', inline: true },
                 { name: '🎉 Événements', value: 'Proposer une idée de projet ou organiser un événement.', inline: true }
             )
