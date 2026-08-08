@@ -15,11 +15,12 @@ const botsConfig = {
     "Irisstudio_ticket": { token: process.env.TOKEN_IRIS_TICKET },
     "BCSO": { token: process.env.TOKEN_BCSO },
     "veyz": { 
-    TOKEN: process.env.TOKEN_VEYZ,
-    CLIENT_ID: process.env.CLIENT_ID_VEYZ,
-    GUILD_ID: process.env.GUILD_ID_VEYZ,
-    token: process.env.TOKEN_VEYZ // On garde le token en minuscule aussi au cas où l'index.js l'utilise ainsi
-} // <-- Le nouveau dossier est ajouté ici
+        TOKEN: process.env.TOKEN_VEYZ,
+        CLIENT_ID: process.env.CLIENT_ID_VEYZ,
+        GUILD_ID: process.env.GUILD_ID_VEYZ,
+        token: process.env.TOKEN_VEYZ 
+    },
+    "Maze": { token: process.env.TOKEN_MAZE } // <-- Ajout du dossier MazeEvent ici
 };
 
 console.log("🛠️ Génération des fichiers config.json pour Railway...");
