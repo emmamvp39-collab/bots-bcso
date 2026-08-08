@@ -16,7 +16,7 @@ module.exports = {
 
         // Création du bel embed
         const reglementEmbed = new EmbedBuilder()
-            .setTitle('📜 Règlement du Serveurrr')
+            .setTitle('📜 Règlement du Serveur')
             .setDescription('Bienvenue sur le serveur !\n\nPour accéder à l\'intégralité des salons, veuillez lire nos règles et cliquer sur le bouton ci-dessous pour les accepter.\n\n**1.** Soyez respectueux envers les autres membres.\n**2.** Pas de spam ni de publicités.\n**3.** Écoutez le staff.')
             .setColor('#a6e1ff') // La couleur que tu as demandée
             .setFooter({ text: 'Merci de valider pour continuer.' });
