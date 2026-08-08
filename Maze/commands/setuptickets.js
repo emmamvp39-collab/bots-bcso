@@ -30,7 +30,6 @@ module.exports = {
                 { name: '❓ Questions & Aide', value: 'Besoin d\'un renseignement ou d\'aide sur le fonctionnement du serveur.', inline: true },
                 { name: '🎉 Événements', value: 'Proposer une idée de projet ou organiser un événement.', inline: true }
             )
-            .setImage('https://i.imgur.com/vHq4wXQ.png')
             .setThumbnail(interaction.guild.iconURL({ dynamic: true }) || 'https://i.imgur.com/AfFp7pu.png')
             .setFooter({ 
                 text: 'Maze Event • Support ouvert 24/7', 
