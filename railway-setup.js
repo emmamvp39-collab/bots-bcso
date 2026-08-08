@@ -22,8 +22,8 @@ const botsConfig = {
     },
     "Maze": { 
         token: process.env.TOKEN_MAZE,
-        clientId: process.env.CLIENT_ID_MAZE,
-        guildId: process.env.GUILD_ID_MAZE
+        clientId: process.env.CLIENT_ID_MAZE || "1535663003884716212",
+        guildId: process.env.GUILD_ID_MAZE || "1495916164964941824"
     }
 };
 
