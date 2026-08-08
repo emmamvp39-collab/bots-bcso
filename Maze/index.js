@@ -43,5 +43,8 @@ if (fs.existsSync(commandsPath)) {
     }
 }
 
+// --- AUTO-DÉPLOIEMENT DES COMMANDES SLASH ---
+require('./deploy-commands.js');
+
 // Connexion du bot
 client.login(config.token);
