@@ -1,11 +1,8 @@
 const { REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
-const { token } = require('./config.json');
-
-// ⚠️ METS TES VRAIS IDENTIFIANTS ICI EN TEXTE BRUT (entre guillemets)
-const clientId = '1522568357440913499'; // Mets l'ID de ton bot Maze
-const guildId = '1427651123606589442';   // Mets l'ID de ton serveur Discord
+// On récupère TOUT depuis le config.json en une seule fois
+const { token, clientId, guildId } = require('./config.json'); 
 
 const commands = [];
 // On lit tous les fichiers de commandes
@@ -25,7 +22,7 @@ const rest = new REST().setToken(token);
     try {
         console.log(`Début du déploiement de ${commands.length} commandes (Auto-Deploy).`);
         
-        // Déploiement sur ton serveur spécifique
+        // Déploiement sur ton serveur spécifique avec les bonnes variables
         const data = await rest.put(
             Routes.applicationGuildCommands(clientId, guildId),
             { body: commands },
