@@ -6,17 +6,36 @@ module.exports = {
         .setDescription('Envoie le panneau de création de tickets.'),
     
     async execute(interaction) {
-        // Optionnel : restreindre cette commande aux admins
         if (!interaction.member.permissions.has('Administrator')) {
-            return interaction.reply({ content: "Tu n'as pas la permission d'utiliser cette commande.", ephemeral: true });
+            return interaction.reply({ content: "❌ Tu n'as pas la permission d'utiliser cette commande.", ephemeral: true });
         }
 
         const ticketEmbed = new EmbedBuilder()
-            .setTitle('🎫 Centre de Support')
-            .setDescription('Bienvenue dans l\'assistance !\n\nCliquez sur le bouton correspondant à votre demande ci-dessous pour ouvrir un ticket.\n\n👑 **Direction :** Pour un problème grave ou un contact direct.\n❓ **Questions :** Pour une question sur le serveur.\n🎉 **Événements :** Pour proposer une idée.')
-            .setColor('#2b2d31') // Couleur sombre style Discord
-            .setFooter({ text: 'Notre équipe vous répondra dans les plus brefs délais.' })
-            .setImage('https://i.imgur.com/vHq4wXQ.png'); // Tu peux mettre une bannière sympa ici ou retirer la ligne
+            .setAuthor({ 
+                name: 'Maze Event | Support', 
+                iconURL: interaction.guild.iconURL({ dynamic: true }) || 'https://i.imgur.com/AfFp7pu.png' 
+            })
+            .setTitle('🎫 CENTRE D\'ASSISTANCE & SUPPORT')
+            .setDescription(
+                "Tu as besoin d'aide, d'un renseignement, ou tu souhaites proposer un projet ? Tu es au bon endroit.\n\n" +
+                "Sélectionne la catégorie qui correspond le mieux à ta demande parmi les boutons ci-dessous. Un membre de notre équipe te prendra en charge dans les plus brefs délais.\n\n" +
+                "**⚠️ Rappels importants avant d'ouvrir un ticket :**\n" +
+                "> 🔹 *Ne mentionne pas le staff inutilement, nous sommes notifiés automatiquement.*\n" +
+                "> 🔹 *Sois précis dans ta demande dès l'ouverture pour que nous puissions t'aider plus vite.*\n" +
+                "> 🔹 *Tout ticket abusif ou troll sera sanctionné.*"
+            )
+            .setColor('#2b2d31')
+            .addFields(
+                { name: '👑 Direction', value: 'Problème grave, signalement important ou contact avec les fondateurs.', inline: true },
+                { name: '❓ Questions & Aide', value: 'Besoin d\'un renseignement ou d\'aide sur le fonctionnement du serveur.', inline: true },
+                { name: '🎉 Événements', value: 'Proposer une idée de projet ou organiser un événement.', inline: true }
+            )
+            .setImage('https://i.imgur.com/vHq4wXQ.png')
+            .setThumbnail(interaction.guild.iconURL({ dynamic: true }) || 'https://i.imgur.com/AfFp7pu.png')
+            .setFooter({ 
+                text: 'Maze Event • Support ouvert 24/7', 
+                iconURL: interaction.client.user.displayAvatarURL() 
+            });
 
         const row = new ActionRowBuilder()
             .addComponents(
@@ -32,12 +51,12 @@ module.exports = {
                     .setEmoji('❓'),
                 new ButtonBuilder()
                     .setCustomId('ticket_events')
-                    .setLabel('Idée Événements')
+                    .setLabel('Événements')
                     .setStyle(ButtonStyle.Success)
                     .setEmoji('🎉')
             );
 
         await interaction.channel.send({ embeds: [ticketEmbed], components: [row] });
-        await interaction.reply({ content: 'Panneau de tickets généré avec succès.', ephemeral: true });
+        await interaction.reply({ content: '✅ Panneau de tickets généré avec succès.', ephemeral: true });
     },
 };
