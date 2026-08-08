@@ -90,20 +90,20 @@ module.exports = {
                 await ticketChannel.send({ content: `${user}`, embeds: [welcomeTicketEmbed], components: [ticketButtons] });
             }
 
-            // --- C. BOUTON : PRENDRE EN CHARGE[cite: 1] ---
+            // --- C. BOUTON : PRENDRE EN CHARGE ---
             if (customId === 'claim_ticket') {
                 const claimEmbed = new EmbedBuilder()
                     .setColor(0x00FF00) // Vert
-                    .setDescription(`✅ **${user.username}** a pris en charge la demande.[cite: 1]`);
+                    .setDescription(`✅ **${user.username}** a pris en charge la demande.`);
                 
-                await interaction.reply({ embeds: [claimEmbed] });[cite: 1]
+                await interaction.reply({ embeds: [claimEmbed] });
                 
                 // Renomme le salon
-                channel.setName(`pris-${channel.name}`).catch(console.error);[cite: 1]
+                channel.setName(`pris-${channel.name}`).catch(console.error);
 
                 // Désactiver le bouton "Prendre en charge" plutôt que de le supprimer, c'est plus propre en V14
-                const message = interaction.message;[cite: 1]
-                const oldRow = message.components[0];[cite: 1]
+                const message = interaction.message;
+                const oldRow = message.components[0];
                 
                 const newRow = new ActionRowBuilder();
                 oldRow.components.forEach(c => {
@@ -115,17 +115,17 @@ module.exports = {
                 await message.edit({ components: [newRow] });
             }
 
-            // --- D. BOUTON : CLÔTURER LE TICKET[cite: 1] ---
+            // --- D. BOUTON : CLÔTURER LE TICKET ---
             if (customId === 'close_ticket') {
                 const closeEmbed = new EmbedBuilder()
-                    .setColor(0xFF0000) // Rouge[cite: 1]
-                    .setDescription(`🔒 **${user.username}** a demandé la fermeture du ticket. Le salon sera supprimé dans 5 secondes.[cite: 1]`);[cite: 1]
+                    .setColor(0xFF0000) // Rouge
+                    .setDescription(`🔒 **${user.username}** a demandé la fermeture du ticket. Le salon sera supprimé dans 5 secondes.`);
 
-                await interaction.reply({ embeds: [closeEmbed] });[cite: 1]
+                await interaction.reply({ embeds: [closeEmbed] });
 
                 setTimeout(() => {
-                    channel.delete().catch(console.error);[cite: 1]
-                }, 5000);[cite: 1]
+                    channel.delete().catch(console.error);
+                }, 5000);
             }
         }
     },
