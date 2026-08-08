@@ -20,7 +20,11 @@ const botsConfig = {
         GUILD_ID: process.env.GUILD_ID_VEYZ,
         token: process.env.TOKEN_VEYZ 
     },
-    "Maze": { token: process.env.TOKEN_MAZE } // <-- Ajout du dossier MazeEvent ici
+    "Maze": { 
+        token: process.env.TOKEN_MAZE,
+        clientId: process.env.CLIENT_ID_MAZE,
+        guildId: process.env.GUILD_ID_MAZE
+    }
 };
 
 console.log("🛠️ Génération des fichiers config.json pour Railway...");
