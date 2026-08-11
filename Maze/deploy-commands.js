@@ -20,7 +20,7 @@ const rest = new REST().setToken(token);
 
 (async () => {
     try {
-        console.log(`Début du déploiement de ${commands.length} commandes (Auto-Deploy).`);
+        console.log(`Début du déploieement de ${commands.length} commandes (Auto-Deploy).`);
         
         // Déploiement sur ton serveur spécifique avec les bonnes variables
         const data = await rest.put(
