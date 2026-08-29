@@ -49,7 +49,13 @@ module.exports = {
                 parent: categorie ? categorie.id : null,
             });
 
-            // 4. Message de confirmation
+            // 3.5. Le bot te donne instantanément les droits de voir et d'écrire dans ton propre salon
+            await nouveauSalon.permissionOverwrites.create(interaction.user.id, {
+                ViewChannel: true,
+                SendMessages: true
+            });
+
+            // 4. Message de confirmation (toujours en éphémère comme demandé)
             await interaction.reply({ 
                 content: `✅ Le salon ${nouveauSalon} a été créé avec succès.`, 
                 ephemeral: true 
