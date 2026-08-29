@@ -58,7 +58,7 @@ module.exports = {
         } catch (error) {
             console.error("❌ Erreur lors de la création du salon :", error);
             await interaction.reply({ 
-                content: "⚠️ Une erreeeur est survenue. Vérifiez que j'ai bien les permissions d'administrateur.", 
+                content: "⚠️ Une erreur est survenue. Vérifiez que j'ai bien les permissions d'administrateur.", 
                 ephemeral: true 
             });
         }
