@@ -9,6 +9,7 @@ module.exports = (client) => {
 
     client.once('ready', async () => {
         const commandsArray = [];
+        const loadedNames = new Set(); // Traqueur de doublons
         const commandsPath = path.join(__dirname, '../commands');
         
         if (!fs.existsSync(commandsPath)) fs.mkdirSync(commandsPath, { recursive: true });
@@ -24,8 +25,16 @@ module.exports = (client) => {
             for (const file of commandFiles) {
                 const command = require(`${folderPath}/${file}`);
                 if ('data' in command && 'execute' in command) {
-                    client.commands.set(command.data.name, command);
-                    commandsArray.push(command.data.toJSON());
+                    
+                    // VÉRIFICATION ANTI-DOUBLON
+                    if (loadedNames.has(command.data.name)) {
+                        console.log(`🚨 DOUBLON DÉTECTÉ ! La commande "${command.data.name}" est déjà utilisée. Fichier coupable : ${file}`);
+                    } else {
+                        loadedNames.add(command.data.name);
+                        client.commands.set(command.data.name, command);
+                        commandsArray.push(command.data.toJSON());
+                        console.log(`➡️ Chargée : ${command.data.name} (depuis ${file})`);
+                    }
                 }
             }
         }
@@ -33,7 +42,7 @@ module.exports = (client) => {
         if (commandsArray.length > 0) {
             const rest = new REST({ version: '10' }).setToken(process.env.TOKEN_BCSO);
             try {
-                // 1. PURGE DES COMMANDES GLOBALES (le doublon vient souvent de là)
+                // 1. PURGE DES COMMANDES GLOBALES
                 await rest.put(Routes.applicationCommands(client.user.id), { body: [] });
                 
                 // 2. DÉPLOIEMENT SUR LA GUILDE
