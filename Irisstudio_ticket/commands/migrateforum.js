@@ -4,7 +4,7 @@ const wait = require('node:timers/promises').setTimeout;
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('migrateforum')
-        .setDescription('Copie tous les posts d\'un salon forum vers un autre avec suivi en temps réel.')
+        .setDescription('Copie tous les posts d\'un salon forum vers un autre (Version Anti-Bug).')
         .addChannelOption(option =>
             option.setName('source')
                 .setDescription('Le salon forum d\'origine contenant les posts à copier')
@@ -28,11 +28,16 @@ module.exports = {
         }
 
         try {
-            // Récupération des posts actifs et archivés[cite: 1]
-            const activeThreads = await sourceForum.threads.fetchActive();
-            const archivedThreads = await sourceForum.threads.fetchArchived();
+            // Récupération plus sécurisée des posts (Actifs + Archivés)
+            const activeThreads = await sourceForum.threads.fetchActive().catch(() => ({ threads: new Map() }));
+            const archivedThreads = await sourceForum.threads.fetchArchived().catch(() => ({ threads: new Map() }));
             
-            const allThreads = [...activeThreads.threads.values(), ...archivedThreads.threads.values()];
+            // On utilise une Map pour éviter les doublons au cas où
+            const allThreadsMap = new Map();
+            if (activeThreads.threads) activeThreads.threads.forEach(t => allThreadsMap.set(t.id, t));
+            if (archivedThreads.threads) archivedThreads.threads.forEach(t => allThreadsMap.set(t.id, t));
+            
+            const allThreads = Array.from(allThreadsMap.values());
 
             if (allThreads.length === 0) {
                 return interaction.editReply({ content: '❌ Aucun post trouvé dans le forum source.' });
@@ -43,14 +48,13 @@ module.exports = {
             let errorCount = 0;
 
             await interaction.editReply({ 
-                content: `🚀 **Démarrage de la migration...**\n📦 **${total}** posts détectés au total.\n⏳ Préparation du premier post...` 
+                content: `🚀 **Démarrage de la migration...**\n📦 **${total}** posts détectés au total.\n⏳ Création en cours (1 post toutes les 5 secondes pour éviter le blocage Discord)...` 
             });
 
             for (let i = 0; i < total; i++) {
                 const thread = allThreads[i];
 
                 try {
-                    // Récupération sécurisée du premier message[cite: 1]
                     const starterMessage = await thread.fetchStarterMessage().catch(() => null);
                     
                     let messageContent = '*(Contenu introuvable ou supprimé)*';
@@ -58,10 +62,10 @@ module.exports = {
 
                     if (starterMessage) {
                         messageContent = starterMessage.content || '*(Image ou fichier uniquement)*';
-                        files = starterMessage.attachments.map(a => a.url);
+                        files = starterMessage.attachments.map(a => a.url).filter(Boolean);
                     }
 
-                    // Création dans le nouveau forum[cite: 1]
+                    // Création dans le nouveau forum
                     await destForum.threads.create({
                         name: thread.name,
                         message: {
@@ -72,29 +76,36 @@ module.exports = {
 
                     successCount++;
                 } catch (err) {
-                    console.error(`[MIGRATEFORUM] Erreur sur le post "${thread.name}":`, err);
+                    // L'erreur est logguée dans ta console mais n'arrête pas le bot
+                    console.error(`[MIGRATEFORUM] Erreur sur le post "${thread.name}":`, err.message);
                     errorCount++;
                 }
 
-                // Mise à jour du message Discord en temps réel
-                // On met à jour l'affichage à chaque post pour que tu saches exactement où ça en est
-                await interaction.editReply({ 
-                    content: `⏳ **Migration en cours...**\n📊 Progression : **${i + 1} / ${total}** posts traités.\n✅ Succès : ${successCount}\n❌ Erreurs : ${errorCount}\n\n*(Post actuel : ${thread.name})*` 
-                });
+                // On met à jour l'affichage uniquement tous les 3 posts (ou au dernier) pour ne pas spam l'API
+                if ((i + 1) % 3 === 0 || (i + 1) === total) {
+                    try {
+                        await interaction.editReply({ 
+                            content: `⏳ **Migration en cours...**\n📊 Progression : **${i + 1} / ${total}** posts traités.\n✅ Succès : ${successCount}\n❌ Erreurs : ${errorCount}\n\n*(Vitesse limitée volontairement pour protéger le bot)*` 
+                        });
+                    } catch (e) {
+                        // On ignore l'erreur si Discord bloque l'actualisation du message
+                    }
+                }
 
-                // Délai augmenté à 4 secondes pour contrer les limitations strictes de Discord sur les forums[cite: 1]
-                await wait(4000); 
+                // Pause de 5 secondes stricte OBLIGATOIRE
+                await wait(5000); 
             }
 
-            // Alerte finale une fois la boucle terminée[cite: 1]
             await interaction.followUp({ 
-                content: `🎉 **MIGRATION TOTALEMENT TERMINÉE !**\n\n📌 **Bilan final :**\n✅ **${successCount}** posts copiés avec succès.\n❌ **${errorCount}** erreurs rencontrées.\n\n*Tu peux maintenant supprimer l'ancien forum si tout est bon.*`, 
+                content: `🎉 **MIGRATION TOTALEMENT TERMINÉE !**\n\n📌 **Bilan final :**\n✅ **${successCount}** posts copiés avec succès.\n❌ **${errorCount}** erreurs rencontrées.`, 
                 ephemeral: true 
             });
 
         } catch (error) {
             console.error('[MIGRATEFORUM] Erreur globale:', error);
-            await interaction.editReply({ content: '❌ Une erreur critique est survenue lors de l\'analyse du forum.' });
+            try {
+                await interaction.editReply({ content: '❌ Une erreur critique est survenue. Regarde la console de ton bot.' });
+            } catch(e) {}
         }
     },
 };
