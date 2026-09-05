@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, ChannelType, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -7,7 +7,6 @@ module.exports = {
         .addChannelOption(option =>
             option.setName('post')
                 .setDescription('Le post exact que tu veux copier (tape son nom)')
-                // Les posts de forum sont considérés comme des PublicThreads par Discord
                 .addChannelTypes(ChannelType.PublicThread) 
                 .setRequired(true))
         .addChannelOption(option =>
@@ -18,13 +17,18 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
-        await interaction.deferReply({ ephemeral: true });
-
-        const sourceThread = interaction.options.getChannel('post');
-        const destForum = interaction.options.getChannel('destination');
-
+        // Enveloppement global dans un try/catch pour garantir que le bot ne crash JAMAIS
         try {
-            // Récupérer le premier message du post
+            // CORRECTION DU CRASH : Utilisation de MessageFlags.Ephemeral au lieu de ephemeral: true
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+            const sourceThread = interaction.options.getChannel('post');
+            const destForum = interaction.options.getChannel('destination');
+
+            if (!sourceThread || !destForum) {
+                return interaction.editReply({ content: '❌ Erreur : Salon introuvable.' });
+            }
+
             const starterMessage = await sourceThread.fetchStarterMessage().catch(() => null);
             
             let messageContent = '*(Contenu introuvable ou supprimé)*';
@@ -32,16 +36,18 @@ module.exports = {
 
             if (starterMessage) {
                 messageContent = starterMessage.content || '*(Image ou fichier uniquement)*';
-                // Récupération des images/fichiers
                 files = starterMessage.attachments.map(a => a.url).filter(Boolean);
             }
 
-            // Création du post dans le nouveau forum
+            // Création du post avec sécurités de limites Discord
             const newThread = await destForum.threads.create({
-                name: sourceThread.name,
+                // Discord limite les titres à 100 caractères max
+                name: sourceThread.name.substring(0, 100), 
                 message: {
-                    content: messageContent,
-                    files: files
+                    // Discord limite les messages à 2000 caractères max
+                    content: messageContent.substring(0, 2000), 
+                    // Discord limite à 10 fichiers max par message
+                    files: files.slice(0, 10) 
                 }
             });
 
@@ -50,10 +56,14 @@ module.exports = {
             });
 
         } catch (error) {
-            console.error(`[CLONEPOST] Erreur:`, error);
-            await interaction.editReply({ 
-                content: '❌ Une erreur est survenue lors de la copie. Vérifie que le bot a bien les permissions.' 
-            });
+            console.error(`[CLONEPOST] Erreur attrapée (le bot ne plantera pas) :`, error);
+            try {
+                await interaction.editReply({ 
+                    content: `❌ Une erreur est survenue lors de la copie : \`${error.message}\`.` 
+                });
+            } catch (e) {
+                // Ignore si l'interaction a expiré
+            }
         }
     },
 };
