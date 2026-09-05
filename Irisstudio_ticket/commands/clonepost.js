@@ -17,16 +17,14 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
-        // Enveloppement global dans un try/catch pour garantir que le bot ne crash JAMAIS
         try {
-            // CORRECTION DU CRASH : Utilisation de MessageFlags.Ephemeral au lieu de ephemeral: true
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             const sourceThread = interaction.options.getChannel('post');
             const destForum = interaction.options.getChannel('destination');
 
             if (!sourceThread || !destForum) {
-                return interaction.editReply({ content: '❌ Erreur : Salon introuvable.' });
+                return interaction.editReply({ content: '❌ Erreur : Salon introuvable.' }).catch(() => {});
             }
 
             const starterMessage = await sourceThread.fetchStarterMessage().catch(() => null);
@@ -39,21 +37,17 @@ module.exports = {
                 files = starterMessage.attachments.map(a => a.url).filter(Boolean);
             }
 
-            // Création du post avec sécurités de limites Discord
             const newThread = await destForum.threads.create({
-                // Discord limite les titres à 100 caractères max
                 name: sourceThread.name.substring(0, 100), 
                 message: {
-                    // Discord limite les messages à 2000 caractères max
                     content: messageContent.substring(0, 2000), 
-                    // Discord limite à 10 fichiers max par message
                     files: files.slice(0, 10) 
                 }
             });
 
             await interaction.editReply({ 
                 content: `✅ Le post **${sourceThread.name}** a été copié avec succès dans <#${destForum.id}> !\n*(Nouveau post : <#${newThread.id}>)*` 
-            });
+            }).catch(() => {});
 
         } catch (error) {
             console.error(`[CLONEPOST] Erreur attrapée (le bot ne plantera pas) :`, error);
