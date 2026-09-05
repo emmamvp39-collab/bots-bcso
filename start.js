@@ -57,7 +57,7 @@ const startBot = (bot) => {
         console.error(`❌ [${bot.name}] ${errorMessage}`);
     });
 
-    // 💥 Si crash
+    // 💥 GESTION DE LA FERMETURE (MODIFIÉE POUR FORCER LE REDÉMARRAGE)
     child.on('close', async (code) => {
         if (code !== 0 && code !== null) {
             console.log(`⚠️ ${bot.name} crash (Code: ${code})`);
@@ -80,14 +80,14 @@ const startBot = (bot) => {
             };
 
             await sendWebhook(payload);
-
-            // 🔄 Restart auto
-            setTimeout(() => {
-                startBot(bot);
-            }, 5000);
         } else {
-            console.log(`✅ ${bot.name} arrêté proprement.`);
+            console.log(`✅ ${bot.name} s'est arrêté proprement (Code: ${code}). Redémarrage forcé en cours...`);
         }
+
+        // 🔄 RESTART AUTO FORCÉ DANS TOUS LES CAS (CRASH OU ARRÊT PROPRE)
+        setTimeout(() => {
+            startBot(bot);
+        }, 5000);
     });
 
     // ❌ Erreur spawn
